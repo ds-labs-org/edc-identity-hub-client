@@ -89,7 +89,7 @@ impl IssuerAdminApiClient {
 mod tests {
   use crate::IdentityHubClientVersion;
   use crate::models::QuerySpec;
-  use wiremock::matchers::{body_json, method, path};
+  use wiremock::matchers::{body_json, header, method, path};
   use wiremock::{Mock, MockServer, ResponseTemplate};
 
   #[tokio::test]
@@ -166,5 +166,33 @@ mod tests {
     assert_eq!(status.credential_id, credential_id);
     assert_eq!(status.status, "active");
     assert_eq!(status.reason, None);
+  }
+
+  #[tokio::test]
+  async fn revoke_credential_posts_to_revoke_with_bearer_token() {
+    let mock_server = MockServer::start().await;
+    let participant_context_id = "participant-1";
+    let credential_id = "cred-1";
+
+    Mock::given(method("POST"))
+      .and(path(format!(
+        "/api/issuer/v1beta/participants/{participant_context_id}/credentials/{credential_id}/revoke"
+      )))
+      .and(header("Authorization", "Bearer test-token"))
+      .respond_with(ResponseTemplate::new(200))
+      .mount(&mock_server)
+      .await;
+
+    let client = super::IssuerAdminApiClient::new(
+      reqwest::Client::new(),
+      mock_server.uri(),
+      Some("test-token".to_string()),
+      IdentityHubClientVersion::V1Beta,
+    );
+
+    client
+      .revoke_credential(participant_context_id, credential_id)
+      .await
+      .expect("revoke_credential should succeed");
   }
 }
