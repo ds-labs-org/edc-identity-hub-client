@@ -473,4 +473,45 @@ mod tests {
     assert_eq!(processes[0].id, "issuance-1");
     assert_eq!(processes[0].state, "DELIVERED");
   }
+
+  #[tokio::test]
+  async fn get_issuance_process_gets_by_id() {
+    let mock_server = MockServer::start().await;
+    let participant_context_id = "participant-1";
+    let issuance_process_id = "issuance-1";
+
+    Mock::given(method("GET"))
+      .and(path(format!(
+        "/api/issuer/v1beta/participants/{participant_context_id}/issuanceprocesses/{issuance_process_id}"
+      )))
+      .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+        "id": issuance_process_id,
+        "holderId": "holder-1",
+        "participantContextId": participant_context_id,
+        "holderPid": "holder-pid-1",
+        "claims": {},
+        "credentialDefinitions": [],
+        "credentialFormats": {},
+        "state": "APPROVED",
+        "createdAt": 1_700_000_000_000i64,
+        "updatedAt": 1_700_000_000_000i64
+      })))
+      .mount(&mock_server)
+      .await;
+
+    let client = super::IssuerAdminApiClient::new(
+      reqwest::Client::new(),
+      mock_server.uri(),
+      None,
+      IdentityHubClientVersion::V1Beta,
+    );
+
+    let process = client
+      .get_issuance_process(participant_context_id, issuance_process_id)
+      .await
+      .expect("get_issuance_process should succeed");
+
+    assert_eq!(process.id, issuance_process_id);
+    assert_eq!(process.state, "APPROVED");
+  }
 }
