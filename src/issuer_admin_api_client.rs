@@ -399,4 +399,51 @@ mod tests {
       .await
       .expect("create_credential_offer should succeed");
   }
+
+  #[tokio::test]
+  async fn query_issuance_processes_posts_query_spec_and_returns_matching_processes() {
+    let mock_server = MockServer::start().await;
+    let participant_context_id = "participant-1";
+    let query = QuerySpec::none();
+
+    let response_body = serde_json::json!([
+      {
+        "id": "issuance-1",
+        "holderId": "holder-1",
+        "participantContextId": participant_context_id,
+        "holderPid": "holder-pid-1",
+        "claims": {"name": "Alice"},
+        "credentialDefinitions": ["credential-definition-1"],
+        "credentialFormats": {"credential-definition-1": "VC1_0_JWT"},
+        "state": "DELIVERED",
+        "createdAt": 1_700_000_000_000i64,
+        "updatedAt": 1_700_000_001_000i64
+      }
+    ]);
+
+    Mock::given(method("POST"))
+      .and(path(format!(
+        "/api/issuer/v1beta/participants/{participant_context_id}/issuanceprocesses/query"
+      )))
+      .and(body_json(&query))
+      .respond_with(ResponseTemplate::new(200).set_body_json(&response_body))
+      .mount(&mock_server)
+      .await;
+
+    let client = super::IssuerAdminApiClient::new(
+      reqwest::Client::new(),
+      mock_server.uri(),
+      None,
+      IdentityHubClientVersion::V1Beta,
+    );
+
+    let processes = client
+      .query_issuance_processes(participant_context_id, &query)
+      .await
+      .expect("query_issuance_processes should succeed");
+
+    assert_eq!(processes.len(), 1);
+    assert_eq!(processes[0].id, "issuance-1");
+    assert_eq!(processes[0].state, "DELIVERED");
+  }
 }
