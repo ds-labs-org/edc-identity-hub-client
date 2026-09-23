@@ -280,4 +280,29 @@ mod tests {
     assert_eq!(result.len(), 1);
     assert_eq!(result[0].id, "cred-def-1");
   }
+
+  #[tokio::test]
+  async fn delete_credential_definition_by_id_deletes_single_resource() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("DELETE"))
+      .and(path(
+        "/api/issuer/v1beta/participants/participant-1/credentialdefinitions/cred-def-1",
+      ))
+      .respond_with(ResponseTemplate::new(204))
+      .mount(&server)
+      .await;
+
+    let client = IssuerAdminApiClient::new(
+      reqwest::Client::new(),
+      server.uri(),
+      None,
+      IdentityHubClientVersion::V1Beta,
+    );
+
+    client
+      .delete_credential_definition_by_id("participant-1", "cred-def-1")
+      .await
+      .expect("delete_credential_definition_by_id should succeed");
+  }
 }
