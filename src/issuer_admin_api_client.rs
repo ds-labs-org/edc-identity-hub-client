@@ -109,6 +109,35 @@ impl IssuerAdminApiClient {
       Err(IdentityHubClientError::Response(response))
     }
   }
+
+  /// Suspends a credential. Routed but stubbed as `501 Not Implemented` in
+  /// the real v0.18.0 IdentityHub server as of this writing - callers get
+  /// back `Err(IdentityHubClientError::Response(_))` until that lands.
+  pub async fn suspend_credential(
+    &self,
+    participant_context_id: &str,
+    credential_id: &str,
+  ) -> Result<()> {
+    let url = format!(
+      "{}/api/issuer/{}/participants/{participant_context_id}/credentials/{credential_id}/suspend",
+      self.endpoint, self.version
+    );
+    let request_builder = self.client.post(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder.send().await?;
+
+    if response.status().is_success() {
+      Ok(())
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
+  }
 }
 
 #[cfg(test)]
