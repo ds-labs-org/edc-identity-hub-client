@@ -7,7 +7,7 @@
 //! (which fronts only the unauthenticated, unversioned `/metadata` endpoint
 //! and whose `get_metadata()` signature other consumers may already rely on).
 
-use crate::models::{QuerySpec, VerifiableCredentialResourceDto};
+use crate::models::{CredentialStatusResponse, QuerySpec, VerifiableCredentialResourceDto};
 use crate::{IdentityHubClientError, IdentityHubClientVersion, Result};
 
 pub struct IssuerAdminApiClient {
@@ -50,6 +50,32 @@ impl IssuerAdminApiClient {
     };
 
     let response = request_builder.json(query).send().await?;
+
+    if response.status().is_success() {
+      Ok(response.json().await?)
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
+  }
+
+  pub async fn get_credential_status(
+    &self,
+    participant_context_id: &str,
+    credential_id: &str,
+  ) -> Result<CredentialStatusResponse> {
+    let url = format!(
+      "{}/api/issuer/{}/participants/{participant_context_id}/credentials/{credential_id}/status",
+      self.endpoint, self.version
+    );
+    let request_builder = self.client.get(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder.send().await?;
 
     if response.status().is_success() {
       Ok(response.json().await?)
