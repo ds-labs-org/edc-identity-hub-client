@@ -9,6 +9,7 @@ use crate::models::{
 };
 pub use dataspace_service_client::DataspaceServiceClient;
 pub use errors::*;
+pub use issuer_admin_api_client::IssuerAdminApiClient;
 pub use issuer_service_client::IssuerServiceClient;
 use std::fmt::Display;
 
