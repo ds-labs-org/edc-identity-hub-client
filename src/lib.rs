@@ -1,5 +1,6 @@
 mod dataspace_service_client;
 mod errors;
+mod issuer_admin_api_client;
 mod issuer_service_client;
 pub mod models;
 
