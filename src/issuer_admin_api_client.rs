@@ -1,5 +1,5 @@
 use crate::errors::{IdentityHubClientError, Result};
-use crate::models::{Holder, HolderDto};
+use crate::models::{Holder, HolderDto, QuerySpec};
 use crate::IdentityHubClientVersion;
 
 /// Client for the issuer-admin-api's participant-scoped, version-segmented
@@ -157,5 +157,52 @@ mod tests {
     assert_eq!(holder.did, "did:web:example.com:holder-1");
     assert_eq!(holder.holder_name, "Alice");
     assert!(!holder.anonymous);
+  }
+
+  #[tokio::test]
+  async fn query_holders_posts_query_spec_and_returns_a_collection() {
+    let mock_server = MockServer::start().await;
+    let query = QuerySpec::default();
+
+    Mock::given(method("POST"))
+      .and(path(
+        "/api/issuer/v1beta/participants/participant-1/holders/query",
+      ))
+      .and(header("Authorization", "Bearer test-token"))
+      .and(body_json(&query))
+      .respond_with(ResponseTemplate::new(200).set_body_json(json!([
+        {
+          "holderId": "holder-1",
+          "participantContextId": "participant-1",
+          "did": "did:web:example.com:holder-1",
+          "holderName": "Alice",
+          "anonymous": false,
+          "properties": {},
+          "lastModifiedAt": 1_700_000_000_000_i64
+        },
+        {
+          "holderId": "holder-2",
+          "participantContextId": "participant-1",
+          "did": "did:web:example.com:holder-2",
+          "holderName": "Bob",
+          "anonymous": true,
+          "properties": {},
+          "lastModifiedAt": 1_700_000_001_000_i64
+        }
+      ])))
+      .expect(1)
+      .mount(&mock_server)
+      .await;
+
+    let client = client(mock_server.uri());
+
+    let holders = client
+      .query_holders("participant-1", &query)
+      .await
+      .expect("query_holders should succeed against the mocked endpoint");
+
+    assert_eq!(holders.len(), 2);
+    assert_eq!(holders[0].holder_id, "holder-1");
+    assert_eq!(holders[1].holder_id, "holder-2");
   }
 }

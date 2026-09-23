@@ -11,6 +11,7 @@ mod issuer_service_metadata;
 mod participant;
 mod participant_context;
 mod protocol_version;
+mod query_spec;
 mod request_credentia_status;
 mod request_credential_body;
 
@@ -27,5 +28,6 @@ pub use issuer_service_metadata::*;
 pub use participant::*;
 pub use participant_context::*;
 pub use protocol_version::*;
+pub use query_spec::*;
 pub use request_credentia_status::*;
 pub use request_credential_body::*;
