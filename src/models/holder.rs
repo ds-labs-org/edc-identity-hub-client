@@ -6,7 +6,7 @@ use std::collections::HashMap;
 /// in the real v0.18.0 source). Note that EDC's `Holder` carries no
 /// lifecycle/approval state of its own -- just identity, a free-form
 /// `properties` map, an `anonymous` flag and a last-modified timestamp.
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Holder {
   pub holder_id: String,
