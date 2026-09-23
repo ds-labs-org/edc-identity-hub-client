@@ -103,4 +103,30 @@ mod tests {
       .await
       .expect("create_credential_definition should succeed");
   }
+
+  #[tokio::test]
+  async fn update_credential_definition_puts_to_credentialdefinitions() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("PUT"))
+      .and(path(
+        "/api/issuer/v1beta/participants/participant-1/credentialdefinitions",
+      ))
+      .and(body_json(&dto()))
+      .respond_with(ResponseTemplate::new(200))
+      .mount(&server)
+      .await;
+
+    let client = IssuerAdminApiClient::new(
+      reqwest::Client::new(),
+      server.uri(),
+      None,
+      IdentityHubClientVersion::V1Beta,
+    );
+
+    client
+      .update_credential_definition("participant-1", &dto())
+      .await
+      .expect("update_credential_definition should succeed");
+  }
 }
