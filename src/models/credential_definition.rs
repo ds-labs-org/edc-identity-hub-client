@@ -6,7 +6,11 @@ use serde::{Deserialize, Serialize};
 ///
 /// See `CredentialDefinitionDto` for the note on `rules`/`mappings` being modeled as
 /// opaque JSON.
-#[derive(Debug, Clone, Deserialize, Serialize)]
+///
+/// Derives `PartialEq` (unlike most other models in this crate) because UI consumers
+/// (e.g. `ds-authority-governance-ui`) hold it in Yew component props and hook
+/// dependencies, both of which require it.
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CredentialDefinition {
   pub id: String,
