@@ -171,7 +171,7 @@ impl IssuerAdminApiClient {
 #[cfg(test)]
 mod tests {
   use crate::IdentityHubClientVersion;
-  use crate::models::QuerySpec;
+  use crate::models::{CredentialOfferDto, QuerySpec};
   use wiremock::matchers::{body_json, header, method, path};
   use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -339,5 +339,36 @@ mod tests {
       .resume_credential(participant_context_id, credential_id)
       .await
       .expect("resume_credential should succeed against a server that implements it");
+  }
+
+  #[tokio::test]
+  async fn create_credential_offer_posts_the_offer_body() {
+    let mock_server = MockServer::start().await;
+    let participant_context_id = "participant-1";
+    let offer = CredentialOfferDto {
+      holder_id: "holder-1".to_string(),
+      credentials: vec!["credential-definition-1".to_string()],
+    };
+
+    Mock::given(method("POST"))
+      .and(path(format!(
+        "/api/issuer/v1beta/participants/{participant_context_id}/credentials/offer"
+      )))
+      .and(body_json(&offer))
+      .respond_with(ResponseTemplate::new(200))
+      .mount(&mock_server)
+      .await;
+
+    let client = super::IssuerAdminApiClient::new(
+      reqwest::Client::new(),
+      mock_server.uri(),
+      None,
+      IdentityHubClientVersion::V1Beta,
+    );
+
+    client
+      .create_credential_offer(participant_context_id, &offer)
+      .await
+      .expect("create_credential_offer should succeed");
   }
 }
