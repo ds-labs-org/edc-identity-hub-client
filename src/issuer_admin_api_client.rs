@@ -1,5 +1,5 @@
 use crate::errors::{IdentityHubClientError, Result};
-use crate::models::{CredentialDefinition, CredentialDefinitionDto};
+use crate::models::{CredentialDefinition, CredentialDefinitionDto, QuerySpec};
 use crate::IdentityHubClientVersion;
 
 /// Client for the issuer-admin-api's participant-scoped, version-segmented resources
@@ -224,5 +224,34 @@ mod tests {
 
     assert_eq!(result.id, "cred-def-1");
     assert_eq!(result.credential_type, "MembershipCredential");
+  }
+
+  #[tokio::test]
+  async fn query_credential_definitions_posts_query_and_returns_collection() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+      .and(path(
+        "/api/issuer/v1beta/participants/participant-1/credentialdefinitions/query",
+      ))
+      .and(body_json(&QuerySpec::default()))
+      .respond_with(ResponseTemplate::new(200).set_body_json(vec![credential_definition()]))
+      .mount(&server)
+      .await;
+
+    let client = IssuerAdminApiClient::new(
+      reqwest::Client::new(),
+      server.uri(),
+      None,
+      IdentityHubClientVersion::V1Beta,
+    );
+
+    let result = client
+      .query_credential_definitions("participant-1", &QuerySpec::default())
+      .await
+      .expect("query_credential_definitions should succeed");
+
+    assert_eq!(result.len(), 1);
+    assert_eq!(result[0].id, "cred-def-1");
   }
 }
