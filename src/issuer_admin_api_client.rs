@@ -1,5 +1,5 @@
 use crate::errors::{IdentityHubClientError, Result};
-use crate::models::CredentialDefinitionDto;
+use crate::models::{CredentialDefinition, CredentialDefinitionDto};
 use crate::IdentityHubClientVersion;
 
 /// Client for the issuer-admin-api's participant-scoped, version-segmented resources
@@ -130,6 +130,22 @@ mod tests {
       .expect("create_credential_definition should succeed");
   }
 
+  fn credential_definition() -> CredentialDefinition {
+    CredentialDefinition {
+      id: "cred-def-1".to_string(),
+      participant_context_id: "participant-1".to_string(),
+      credential_type: "MembershipCredential".to_string(),
+      format: "VC1_0_JWT".to_string(),
+      json_schema: Some("{\"type\":\"object\"}".to_string()),
+      json_schema_url: None,
+      validity: 3600,
+      attestations: vec!["attestation-1".to_string()],
+      additional_context: vec![],
+      rules: vec![],
+      mappings: vec![],
+    }
+  }
+
   #[tokio::test]
   async fn update_credential_definition_puts_to_credentialdefinitions() {
     let server = MockServer::start().await;
@@ -154,5 +170,33 @@ mod tests {
       .update_credential_definition("participant-1", &dto())
       .await
       .expect("update_credential_definition should succeed");
+  }
+
+  #[tokio::test]
+  async fn get_credential_definition_by_id_gets_single_resource() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+      .and(path(
+        "/api/issuer/v1beta/participants/participant-1/credentialdefinitions/cred-def-1",
+      ))
+      .respond_with(ResponseTemplate::new(200).set_body_json(credential_definition()))
+      .mount(&server)
+      .await;
+
+    let client = IssuerAdminApiClient::new(
+      reqwest::Client::new(),
+      server.uri(),
+      None,
+      IdentityHubClientVersion::V1Beta,
+    );
+
+    let result = client
+      .get_credential_definition_by_id("participant-1", "cred-def-1")
+      .await
+      .expect("get_credential_definition_by_id should succeed");
+
+    assert_eq!(result.id, "cred-def-1");
+    assert_eq!(result.credential_type, "MembershipCredential");
   }
 }

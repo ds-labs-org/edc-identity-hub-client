@@ -1,6 +1,7 @@
 mod catalog_response;
 mod create_participant_response;
 mod credential;
+mod credential_definition;
 mod credential_definition_dto;
 mod did_web;
 mod identity;
@@ -16,6 +17,7 @@ mod request_credential_body;
 pub use catalog_response::*;
 pub use create_participant_response::*;
 pub use credential::Credential;
+pub use credential_definition::*;
 pub use credential_definition_dto::*;
 pub use did_web::*;
 pub use identity::*;
