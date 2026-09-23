@@ -8,7 +8,8 @@
 //! and whose `get_metadata()` signature other consumers may already rely on).
 
 use crate::models::{
-  CredentialOfferDto, CredentialStatusResponse, QuerySpec, VerifiableCredentialResourceDto,
+  CredentialOfferDto, CredentialStatusResponse, IssuanceProcessDto, QuerySpec,
+  VerifiableCredentialResourceDto,
 };
 use crate::{IdentityHubClientError, IdentityHubClientVersion, Result};
 
@@ -190,6 +191,32 @@ impl IssuerAdminApiClient {
 
     if response.status().is_success() {
       Ok(())
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
+  }
+
+  pub async fn query_issuance_processes(
+    &self,
+    participant_context_id: &str,
+    query: &QuerySpec,
+  ) -> Result<Vec<IssuanceProcessDto>> {
+    let url = format!(
+      "{}/api/issuer/{}/participants/{participant_context_id}/issuanceprocesses/query",
+      self.endpoint, self.version
+    );
+    let request_builder = self.client.post(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder.json(query).send().await?;
+
+    if response.status().is_success() {
+      Ok(response.json().await?)
     } else {
       Err(IdentityHubClientError::Response(response))
     }
