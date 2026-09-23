@@ -64,6 +64,7 @@ impl IssuerAdminApiClient {
 #[cfg(not(target_arch = "wasm32"))]
 mod tests {
   use super::*;
+  use serde_json::json;
   use wiremock::matchers::{body_json, header, method, path};
   use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -102,5 +103,40 @@ mod tests {
       .create_holder("participant-1", &holder)
       .await
       .expect("create_holder should succeed against the mocked endpoint");
+  }
+
+  #[tokio::test]
+  async fn get_holder_fetches_a_single_holder_by_id() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+      .and(path(
+        "/api/issuer/v1beta/participants/participant-1/holders/holder-1",
+      ))
+      .and(header("Authorization", "Bearer test-token"))
+      .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+        "holderId": "holder-1",
+        "participantContextId": "participant-1",
+        "did": "did:web:example.com:holder-1",
+        "holderName": "Alice",
+        "anonymous": false,
+        "properties": {"tier": "gold"},
+        "lastModifiedAt": 1_700_000_000_000_i64
+      })))
+      .expect(1)
+      .mount(&mock_server)
+      .await;
+
+    let client = client(mock_server.uri());
+
+    let holder = client
+      .get_holder("participant-1", "holder-1")
+      .await
+      .expect("get_holder should succeed against the mocked endpoint");
+
+    assert_eq!(holder.holder_id, "holder-1");
+    assert_eq!(holder.did, "did:web:example.com:holder-1");
+    assert_eq!(holder.holder_name, "Alice");
+    assert!(!holder.anonymous);
   }
 }
