@@ -228,4 +228,26 @@ mod tests {
     assert_eq!(holders[0].holder_id, "holder-1");
     assert_eq!(holders[1].holder_id, "holder-2");
   }
+
+  #[tokio::test]
+  async fn delete_holder_sends_a_delete_request_for_the_holder_id() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("DELETE"))
+      .and(path(
+        "/api/issuer/v1beta/participants/participant-1/holders/holder-1",
+      ))
+      .and(header("Authorization", "Bearer test-token"))
+      .respond_with(ResponseTemplate::new(204))
+      .expect(1)
+      .mount(&mock_server)
+      .await;
+
+    let client = client(mock_server.uri());
+
+    client
+      .delete_holder("participant-1", "holder-1")
+      .await
+      .expect("delete_holder should succeed against the mocked endpoint");
+  }
 }
