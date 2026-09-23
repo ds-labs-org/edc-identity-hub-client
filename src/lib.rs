@@ -13,13 +13,35 @@ use std::fmt::Display;
 
 pub enum IdentityHubClientVersion {
   V1Alpha,
+  V1Beta,
 }
 
 impl Display for IdentityHubClientVersion {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
       IdentityHubClientVersion::V1Alpha => write!(f, "v1alpha"),
+      IdentityHubClientVersion::V1Beta => write!(f, "v1beta"),
     }
+  }
+}
+
+#[cfg(test)]
+mod version_tests {
+  use super::*;
+
+  // EDC IdentityHub v0.18.0's identity-api and issuer-admin-api both moved
+  // their UNSTABLE version segment from /v1alpha to /v1beta (confirmed
+  // against org.eclipse.edc.identityhub.api.Versions.UNSTABLE in the real
+  // source tree). Both variants are kept: v1alpha for whatever EDC version
+  // this crate's other existing consumers still run.
+  #[test]
+  fn v1alpha_displays_as_v1alpha() {
+    assert_eq!(IdentityHubClientVersion::V1Alpha.to_string(), "v1alpha");
+  }
+
+  #[test]
+  fn v1beta_displays_as_v1beta() {
+    assert_eq!(IdentityHubClientVersion::V1Beta.to_string(), "v1beta");
   }
 }
 

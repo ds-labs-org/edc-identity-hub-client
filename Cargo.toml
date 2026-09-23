@@ -24,6 +24,10 @@ uuid = { version = "1.24.0", features = ["v4"] }
 clap = { version = "4.6.3", features = ["derive", "env"] }
 reqwest = { workspace = true, features = ["form"] }
 tokio = { version = "1.53.1", features = ["full"] }
+# HTTP contract tests for every client method against mocked v1alpha/v1beta
+# responses -- runs a real (native-only) hyper server, hence the same
+# wasm32 gate as tokio/clap above.
+wiremock = "0.6"
 
 [workspace.dependencies]
 reqwest = { version = "0.13", features = ["json"]}
