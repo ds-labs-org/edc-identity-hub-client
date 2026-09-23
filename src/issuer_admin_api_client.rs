@@ -29,6 +29,32 @@ impl IssuerAdminApiClient {
       version,
     }
   }
+
+  pub async fn create_credential_definition(
+    &self,
+    participant_context_id: &str,
+    credential_definition: &CredentialDefinitionDto,
+  ) -> Result<()> {
+    let url = format!(
+      "{}/api/issuer/{}/participants/{participant_context_id}/credentialdefinitions",
+      self.endpoint, self.version
+    );
+    let request_builder = self.client.post(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder.json(credential_definition).send().await?;
+
+    if response.status().is_success() {
+      Ok(())
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
+  }
 }
 
 #[cfg(test)]
