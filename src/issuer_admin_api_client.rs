@@ -221,4 +221,38 @@ mod tests {
       .await
       .expect("revoke_credential should succeed");
   }
+
+  // NOTE: in the real v0.18.0 server, POST .../suspend always answers 501
+  // Not Implemented (routed but stubbed) - see IssuerCredentialsAdminApiController
+  // in the EDC IdentityHub source. This test mocks a 200 to pin down the
+  // request shape suspend_credential() sends once the server implements it;
+  // against today's real deployment the call will surface as
+  // Err(IdentityHubClientError::Response(_)) with status 501, which callers
+  // must handle explicitly (e.g. by disabling the Suspend action in the UI).
+  #[tokio::test]
+  async fn suspend_credential_posts_to_suspend() {
+    let mock_server = MockServer::start().await;
+    let participant_context_id = "participant-1";
+    let credential_id = "cred-1";
+
+    Mock::given(method("POST"))
+      .and(path(format!(
+        "/api/issuer/v1beta/participants/{participant_context_id}/credentials/{credential_id}/suspend"
+      )))
+      .respond_with(ResponseTemplate::new(200))
+      .mount(&mock_server)
+      .await;
+
+    let client = super::IssuerAdminApiClient::new(
+      reqwest::Client::new(),
+      mock_server.uri(),
+      None,
+      IdentityHubClientVersion::V1Beta,
+    );
+
+    client
+      .suspend_credential(participant_context_id, credential_id)
+      .await
+      .expect("suspend_credential should succeed against a server that implements it");
+  }
 }
