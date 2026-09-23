@@ -133,6 +133,32 @@ impl IssuerAdminApiClient {
       Err(IdentityHubClientError::Response(response))
     }
   }
+
+  pub async fn delete_credential_definition_by_id(
+    &self,
+    participant_context_id: &str,
+    credential_definition_id: &str,
+  ) -> Result<()> {
+    let url = format!(
+      "{}/api/issuer/{}/participants/{participant_context_id}/credentialdefinitions/{credential_definition_id}",
+      self.endpoint, self.version
+    );
+    let request_builder = self.client.delete(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder.send().await?;
+
+    if response.status().is_success() {
+      Ok(())
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
+  }
 }
 
 #[cfg(test)]
