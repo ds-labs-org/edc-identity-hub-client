@@ -221,6 +221,32 @@ impl IssuerAdminApiClient {
       Err(IdentityHubClientError::Response(response))
     }
   }
+
+  pub async fn get_issuance_process(
+    &self,
+    participant_context_id: &str,
+    issuance_process_id: &str,
+  ) -> Result<IssuanceProcessDto> {
+    let url = format!(
+      "{}/api/issuer/{}/participants/{participant_context_id}/issuanceprocesses/{issuance_process_id}",
+      self.endpoint, self.version
+    );
+    let request_builder = self.client.get(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder.send().await?;
+
+    if response.status().is_success() {
+      Ok(response.json().await?)
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
+  }
 }
 
 #[cfg(test)]
