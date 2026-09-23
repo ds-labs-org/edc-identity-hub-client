@@ -100,6 +100,25 @@ impl IssuerAdminApiClient {
       Err(IdentityHubClientError::Response(response))
     }
   }
+
+  pub async fn delete_holder(&self, participant_context_id: &str, holder_id: &str) -> Result<()> {
+    let url = format!("{}/{holder_id}", self.holders_url(participant_context_id));
+    let request_builder = self.client.delete(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder.send().await?;
+
+    if response.status().is_success() {
+      Ok(())
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
+  }
 }
 
 #[cfg(test)]
