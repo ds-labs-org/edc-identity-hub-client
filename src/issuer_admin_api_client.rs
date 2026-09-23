@@ -77,6 +77,29 @@ impl IssuerAdminApiClient {
       Err(IdentityHubClientError::Response(response))
     }
   }
+
+  pub async fn query_holders(
+    &self,
+    participant_context_id: &str,
+    query: &QuerySpec,
+  ) -> Result<Vec<Holder>> {
+    let url = format!("{}/query", self.holders_url(participant_context_id));
+    let request_builder = self.client.post(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder.json(query).send().await?;
+
+    if response.status().is_success() {
+      Ok(response.json().await?)
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
+  }
 }
 
 #[cfg(test)]
