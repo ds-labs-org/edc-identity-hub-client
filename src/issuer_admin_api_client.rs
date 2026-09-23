@@ -269,4 +269,32 @@ mod tests {
       .await
       .expect("delete_holder should succeed against the mocked endpoint");
   }
+
+  #[tokio::test]
+  async fn update_holder_puts_holder_dto_to_the_holders_endpoint() {
+    let mock_server = MockServer::start().await;
+    let holder = HolderDto::new(
+      "holder-1".to_string(),
+      "did:web:example.com:holder-1".to_string(),
+      "Alice Updated".to_string(),
+    );
+
+    Mock::given(method("PUT"))
+      .and(path(
+        "/api/issuer/v1beta/participants/participant-1/holders",
+      ))
+      .and(header("Authorization", "Bearer test-token"))
+      .and(body_json(&holder))
+      .respond_with(ResponseTemplate::new(200))
+      .expect(1)
+      .mount(&mock_server)
+      .await;
+
+    let client = client(mock_server.uri());
+
+    client
+      .update_holder("participant-1", &holder)
+      .await
+      .expect("update_holder should succeed against the mocked endpoint");
+  }
 }
