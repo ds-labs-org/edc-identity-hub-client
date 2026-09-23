@@ -106,4 +106,39 @@ mod tests {
     assert_eq!(credentials[0].id, "cred-1");
     assert_eq!(credentials[0].format, "VC1_0_JWT");
   }
+
+  #[tokio::test]
+  async fn get_credential_status_gets_the_status_endpoint() {
+    let mock_server = MockServer::start().await;
+    let participant_context_id = "participant-1";
+    let credential_id = "cred-1";
+
+    Mock::given(method("GET"))
+      .and(path(format!(
+        "/api/issuer/v1beta/participants/{participant_context_id}/credentials/{credential_id}/status"
+      )))
+      .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+        "credentialId": credential_id,
+        "status": "active",
+        "reason": null
+      })))
+      .mount(&mock_server)
+      .await;
+
+    let client = super::IssuerAdminApiClient::new(
+      reqwest::Client::new(),
+      mock_server.uri(),
+      None,
+      IdentityHubClientVersion::V1Beta,
+    );
+
+    let status = client
+      .get_credential_status(participant_context_id, credential_id)
+      .await
+      .expect("get_credential_status should succeed");
+
+    assert_eq!(status.credential_id, credential_id);
+    assert_eq!(status.status, "active");
+    assert_eq!(status.reason, None);
+  }
 }
