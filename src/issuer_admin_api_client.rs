@@ -284,4 +284,32 @@ mod tests {
       .await
       .expect("suspend_credential should succeed against a server that implements it");
   }
+
+  // Same 501-stub caveat as suspend_credential above.
+  #[tokio::test]
+  async fn resume_credential_posts_to_resume() {
+    let mock_server = MockServer::start().await;
+    let participant_context_id = "participant-1";
+    let credential_id = "cred-1";
+
+    Mock::given(method("POST"))
+      .and(path(format!(
+        "/api/issuer/v1beta/participants/{participant_context_id}/credentials/{credential_id}/resume"
+      )))
+      .respond_with(ResponseTemplate::new(200))
+      .mount(&mock_server)
+      .await;
+
+    let client = super::IssuerAdminApiClient::new(
+      reqwest::Client::new(),
+      mock_server.uri(),
+      None,
+      IdentityHubClientVersion::V1Beta,
+    );
+
+    client
+      .resume_credential(participant_context_id, credential_id)
+      .await
+      .expect("resume_credential should succeed against a server that implements it");
+  }
 }
