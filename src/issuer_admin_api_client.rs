@@ -7,7 +7,9 @@
 //! (which fronts only the unauthenticated, unversioned `/metadata` endpoint
 //! and whose `get_metadata()` signature other consumers may already rely on).
 
-use crate::models::{CredentialStatusResponse, QuerySpec, VerifiableCredentialResourceDto};
+use crate::models::{
+  CredentialOfferDto, CredentialStatusResponse, QuerySpec, VerifiableCredentialResourceDto,
+};
 use crate::{IdentityHubClientError, IdentityHubClientVersion, Result};
 
 pub struct IssuerAdminApiClient {
@@ -159,6 +161,32 @@ impl IssuerAdminApiClient {
     };
 
     let response = request_builder.send().await?;
+
+    if response.status().is_success() {
+      Ok(())
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
+  }
+
+  pub async fn create_credential_offer(
+    &self,
+    participant_context_id: &str,
+    offer: &CredentialOfferDto,
+  ) -> Result<()> {
+    let url = format!(
+      "{}/api/issuer/{}/participants/{participant_context_id}/credentials/offer",
+      self.endpoint, self.version
+    );
+    let request_builder = self.client.post(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder.json(offer).send().await?;
 
     if response.status().is_success() {
       Ok(())
