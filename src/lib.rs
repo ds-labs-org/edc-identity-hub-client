@@ -394,6 +394,14 @@ impl IdentityHubClient {
       Err(IdentityHubClientError::Response(response))
     }
   }
+
+  /// `POST .../dids/state` answers with the `DidState` name as its body
+  /// (e.g. `PUBLISHED`) -- some deployments serialize it as a raw
+  /// text/plain string and others as a quoted JSON string, so surrounding
+  /// quotes are stripped defensively either way.
+  pub async fn get_did_state(&self, _participant_context_id: &str, _did: &str) -> Result<String> {
+    unimplemented!("get_did_state")
+  }
 }
 
 // wiremock/tokio are only pulled in as dev-dependencies for non-wasm32
@@ -509,5 +517,30 @@ mod identity_hub_client_tests {
 
     assert_eq!(result.len(), 1);
     assert_eq!(result[0].id, "did:web:example.com");
+  }
+
+  #[tokio::test]
+  async fn get_did_state_posts_did_and_returns_plain_text_state() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+      .and(path(
+        "/api/identity/v1beta/participants/participant-1/dids/state",
+      ))
+      .and(header("Authorization", "Bearer test-token"))
+      .and(body_json(&DidRequestPayload::new("did:web:example.com")))
+      .respond_with(ResponseTemplate::new(200).set_body_string("PUBLISHED"))
+      .expect(1)
+      .mount(&server)
+      .await;
+
+    let client = client_with_token(server.uri(), "test-token");
+
+    let state = client
+      .get_did_state("participant-1", "did:web:example.com")
+      .await
+      .expect("get_did_state should succeed against the mocked endpoint");
+
+    assert_eq!(state, "PUBLISHED");
   }
 }
