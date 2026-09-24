@@ -399,8 +399,30 @@ impl IdentityHubClient {
   /// (e.g. `PUBLISHED`) -- some deployments serialize it as a raw
   /// text/plain string and others as a quoted JSON string, so surrounding
   /// quotes are stripped defensively either way.
-  pub async fn get_did_state(&self, _participant_context_id: &str, _did: &str) -> Result<String> {
-    unimplemented!("get_did_state")
+  pub async fn get_did_state(&self, participant_context_id: &str, did: &str) -> Result<String> {
+    let url = format!(
+      "{}/api/identity/{}/participants/{participant_context_id}/dids/state",
+      self.endpoint, self.version
+    );
+    let request_builder = self.client.post(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder
+      .json(&DidRequestPayload::new(did))
+      .send()
+      .await?;
+
+    if response.status().is_success() {
+      let body = response.text().await?;
+      Ok(body.trim().trim_matches('"').to_string())
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
   }
 }
 
