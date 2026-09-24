@@ -344,8 +344,29 @@ impl IdentityHubClient {
     }
   }
 
-  pub async fn unpublish_did(&self, _participant_context_id: &str, _did: &str) -> Result<()> {
-    unimplemented!("unpublish_did")
+  pub async fn unpublish_did(&self, participant_context_id: &str, did: &str) -> Result<()> {
+    let url = format!(
+      "{}/api/identity/{}/participants/{participant_context_id}/dids/unpublish",
+      self.endpoint, self.version
+    );
+    let request_builder = self.client.post(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder
+      .json(&DidRequestPayload::new(did))
+      .send()
+      .await?;
+
+    if response.status().is_success() {
+      Ok(())
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
   }
 }
 
