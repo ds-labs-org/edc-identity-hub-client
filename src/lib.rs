@@ -5,7 +5,8 @@ mod issuer_service_client;
 pub mod models;
 
 use crate::models::{
-  CreateParticipantResponse, DidWeb, Participant, ParticipantContext, RequestCredentialInformation,
+  CreateParticipantResponse, DidDocument, DidRequestPayload, DidWeb, KeyDescriptor, KeyPairResource,
+  Participant, ParticipantContext, QuerySpec, RequestCredentialInformation,
 };
 pub use dataspace_service_client::DataspaceServiceClient;
 pub use errors::*;
@@ -312,5 +313,69 @@ impl IdentityHubClient {
     };
 
     Ok(request_builder.send().await?.json().await?)
+  }
+
+  // ---------------------------------------------------------------------
+  // DID management (.../dids)
+  // ---------------------------------------------------------------------
+
+  pub async fn publish_did(&self, _participant_context_id: &str, _did: &str) -> Result<()> {
+    unimplemented!("publish_did")
+  }
+}
+
+// wiremock/tokio are only pulled in as dev-dependencies for non-wasm32
+// targets (they run a real hyper server), so these contract tests must be
+// gated the same way -- otherwise `cargo check --target
+// wasm32-unknown-unknown --all-targets` fails trying to resolve `wiremock`.
+#[cfg(test)]
+#[cfg(not(target_arch = "wasm32"))]
+mod identity_hub_client_tests {
+  use super::*;
+  use wiremock::matchers::{body_json, header, method, path};
+  use wiremock::{Mock, MockServer, ResponseTemplate};
+
+  fn client_with_token(endpoint: String, token: &str) -> IdentityHubClient {
+    IdentityHubClient::new(
+      reqwest::Client::new(),
+      endpoint,
+      Some(token.to_string()),
+      IdentityHubClientVersion::V1Beta,
+    )
+  }
+
+  #[allow(dead_code)]
+  fn client(endpoint: String) -> IdentityHubClient {
+    IdentityHubClient::new(
+      reqwest::Client::new(),
+      endpoint,
+      None,
+      IdentityHubClientVersion::V1Beta,
+    )
+  }
+
+  // -- dids ------------------------------------------------------------
+
+  #[tokio::test]
+  async fn publish_did_posts_to_dids_publish() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+      .and(path(
+        "/api/identity/v1beta/participants/participant-1/dids/publish",
+      ))
+      .and(header("Authorization", "Bearer test-token"))
+      .and(body_json(&DidRequestPayload::new("did:web:example.com")))
+      .respond_with(ResponseTemplate::new(204))
+      .expect(1)
+      .mount(&server)
+      .await;
+
+    let client = client_with_token(server.uri(), "test-token");
+
+    client
+      .publish_did("participant-1", "did:web:example.com")
+      .await
+      .expect("publish_did should succeed against the mocked endpoint");
   }
 }
