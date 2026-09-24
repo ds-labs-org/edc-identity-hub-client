@@ -368,6 +368,14 @@ impl IdentityHubClient {
       Err(IdentityHubClientError::Response(response))
     }
   }
+
+  pub async fn query_dids(
+    &self,
+    _participant_context_id: &str,
+    _query: &QuerySpec,
+  ) -> Result<Vec<DidDocument>> {
+    unimplemented!("query_dids")
+  }
 }
 
 // wiremock/tokio are only pulled in as dev-dependencies for non-wasm32
@@ -446,5 +454,42 @@ mod identity_hub_client_tests {
       .unpublish_did("participant-1", "did:web:example.com")
       .await
       .expect("unpublish_did should succeed against the mocked endpoint");
+  }
+
+  fn did_document() -> DidDocument {
+    DidDocument {
+      id: "did:web:example.com".to_string(),
+      context: vec![serde_json::json!("https://www.w3.org/ns/did/v1")],
+      service: vec![],
+      verification_method: vec![],
+      authentication: vec![],
+      capability_invocation: vec![],
+    }
+  }
+
+  #[tokio::test]
+  async fn query_dids_posts_query_and_returns_collection() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+      .and(path(
+        "/api/identity/v1beta/participants/participant-1/dids/query",
+      ))
+      .and(header("Authorization", "Bearer test-token"))
+      .and(body_json(&QuerySpec::default()))
+      .respond_with(ResponseTemplate::new(200).set_body_json(vec![did_document()]))
+      .expect(1)
+      .mount(&server)
+      .await;
+
+    let client = client_with_token(server.uri(), "test-token");
+
+    let result = client
+      .query_dids("participant-1", &QuerySpec::default())
+      .await
+      .expect("query_dids should succeed against the mocked endpoint");
+
+    assert_eq!(result.len(), 1);
+    assert_eq!(result[0].id, "did:web:example.com");
   }
 }
