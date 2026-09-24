@@ -532,12 +532,30 @@ impl IdentityHubClient {
 
   pub async fn rotate_keypair(
     &self,
-    _participant_context_id: &str,
-    _key_pair_id: &str,
-    _new_key: Option<&KeyDescriptor>,
-    _duration: i64,
+    participant_context_id: &str,
+    key_pair_id: &str,
+    new_key: Option<&KeyDescriptor>,
+    duration: i64,
   ) -> Result<()> {
-    unimplemented!("rotate_keypair")
+    let url = format!(
+      "{}/api/identity/{}/participants/{participant_context_id}/keypairs/{key_pair_id}/rotate?duration={duration}",
+      self.endpoint, self.version
+    );
+    let request_builder = self.client.post(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder.json(&new_key).send().await?;
+
+    if response.status().is_success() {
+      Ok(())
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
   }
 }
 
