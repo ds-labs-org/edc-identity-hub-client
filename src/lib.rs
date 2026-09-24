@@ -51,7 +51,7 @@ mod version_tests {
 pub struct IdentityHubClient {
   client: reqwest::Client,
   endpoint: String,
-  bearer_token: Option<String>,
+  api_key: Option<String>,
   version: IdentityHubClientVersion,
 }
 
@@ -59,13 +59,13 @@ impl IdentityHubClient {
   pub fn new(
     client: reqwest::Client,
     endpoint: String,
-    bearer_token: Option<String>,
+    api_key: Option<String>,
     version: IdentityHubClientVersion,
   ) -> Self {
     Self {
       client,
       endpoint,
-      bearer_token,
+      api_key,
       version,
     }
   }
@@ -91,8 +91,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.post(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -113,8 +113,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.get(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -135,8 +135,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.get(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -161,8 +161,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.post(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -183,8 +183,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.delete(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -205,8 +205,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.get(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -231,8 +231,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.get(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -253,8 +253,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.delete(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -279,8 +279,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.post(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -306,8 +306,8 @@ impl IdentityHubClient {
 
     let request_builder = self.client.get(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -326,8 +326,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.post(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -351,8 +351,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.post(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -380,8 +380,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.post(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -406,8 +406,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.post(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -436,8 +436,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.get(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -462,8 +462,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.get(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -489,8 +489,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.put(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -515,8 +515,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.post(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -543,8 +543,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.post(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -570,8 +570,8 @@ impl IdentityHubClient {
     );
     let request_builder = self.client.post(&url);
 
-    let request_builder = if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    let request_builder = if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     };
@@ -626,7 +626,7 @@ mod identity_hub_client_tests {
       .and(path(
         "/api/identity/v1beta/participants/participant-1/dids/publish",
       ))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .and(body_json(&DidRequestPayload::new("did:web:example.com")))
       .respond_with(ResponseTemplate::new(204))
       .expect(1)
@@ -649,7 +649,7 @@ mod identity_hub_client_tests {
       .and(path(
         "/api/identity/v1beta/participants/participant-1/dids/unpublish",
       ))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .and(body_json(&DidRequestPayload::new("did:web:example.com")))
       .respond_with(ResponseTemplate::new(204))
       .expect(1)
@@ -683,7 +683,7 @@ mod identity_hub_client_tests {
       .and(path(
         "/api/identity/v1beta/participants/participant-1/dids/query",
       ))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .and(body_json(&QuerySpec::default()))
       .respond_with(ResponseTemplate::new(200).set_body_json(vec![did_document()]))
       .expect(1)
@@ -709,7 +709,7 @@ mod identity_hub_client_tests {
       .and(path(
         "/api/identity/v1beta/participants/participant-1/dids/state",
       ))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .and(body_json(&DidRequestPayload::new("did:web:example.com")))
       .respond_with(ResponseTemplate::new(200).set_body_string("PUBLISHED"))
       .expect(1)
@@ -755,7 +755,7 @@ mod identity_hub_client_tests {
       .and(path(
         "/api/identity/v1beta/participants/participant-1/keypairs",
       ))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .respond_with(
         ResponseTemplate::new(200).set_body_json(vec![key_pair_resource("keypair-1", true)]),
       )
@@ -783,7 +783,7 @@ mod identity_hub_client_tests {
       .and(path(
         "/api/identity/v1beta/participants/participant-1/keypairs/keypair-1",
       ))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .respond_with(ResponseTemplate::new(200).set_body_json(key_pair_resource("keypair-1", true)))
       .expect(1)
       .mount(&server)
@@ -817,7 +817,7 @@ mod identity_hub_client_tests {
         "/api/identity/v1beta/participants/participant-1/keypairs",
       ))
       .and(wiremock::matchers::query_param("makeDefault", "true"))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .and(body_json(&key_generator_descriptor()))
       .respond_with(ResponseTemplate::new(201))
       .expect(1)
@@ -840,7 +840,7 @@ mod identity_hub_client_tests {
       .and(path(
         "/api/identity/v1beta/participants/participant-1/keypairs/keypair-1/activate",
       ))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .respond_with(ResponseTemplate::new(204))
       .expect(1)
       .mount(&server)
@@ -863,7 +863,7 @@ mod identity_hub_client_tests {
         "/api/identity/v1beta/participants/participant-1/keypairs/keypair-1/rotate",
       ))
       .and(wiremock::matchers::query_param("duration", "3600"))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .and(body_json(&Option::<KeyDescriptor>::None))
       .respond_with(ResponseTemplate::new(204))
       .expect(1)
@@ -887,7 +887,7 @@ mod identity_hub_client_tests {
       .and(path(
         "/api/identity/v1beta/participants/participant-1/keypairs/keypair-1/revoke",
       ))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .and(body_json(&Some(replacement.clone())))
       .respond_with(ResponseTemplate::new(204))
       .expect(1)

@@ -3,7 +3,7 @@
 //! suspend / resume / offer), and issuance-process monitoring (query /
 //! get-by-id). Every resource here is participant-scoped and
 //! version-segmented exactly like `IdentityHubClient`, so this is a
-//! dedicated struct with the same `endpoint` + `version` + `bearer_token`
+//! dedicated struct with the same `endpoint` + `version` + `api_key`
 //! shape rather than an extension of `IssuerServiceClient` (which fronts
 //! only the unauthenticated, unversioned `/metadata` endpoint and whose
 //! `get_metadata()` signature other consumers may already rely on).
@@ -25,7 +25,7 @@ pub struct IssuerAdminApiClient {
   client: reqwest::Client,
   endpoint: String,
   admin_api_path: String,
-  bearer_token: Option<String>,
+  api_key: Option<String>,
   version: IdentityHubClientVersion,
 }
 
@@ -34,14 +34,14 @@ impl IssuerAdminApiClient {
     client: reqwest::Client,
     endpoint: String,
     admin_api_path: String,
-    bearer_token: Option<String>,
+    api_key: Option<String>,
     version: IdentityHubClientVersion,
   ) -> Self {
     Self {
       client,
       endpoint,
       admin_api_path,
-      bearer_token,
+      api_key,
       version,
     }
   }
@@ -56,8 +56,8 @@ impl IssuerAdminApiClient {
   }
 
   fn authorize(&self, request_builder: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
-    if let Some(bearer_token) = &self.bearer_token {
-      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    if let Some(api_key) = &self.api_key {
+      request_builder.header("x-api-key", api_key)
     } else {
       request_builder
     }
@@ -487,7 +487,7 @@ mod tests {
       .and(path(
         "/api/issuer/v1beta/participants/participant-1/credentialdefinitions",
       ))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .and(body_json(&credential_definition_dto()))
       .respond_with(ResponseTemplate::new(201))
       .mount(&server)
@@ -604,7 +604,7 @@ mod tests {
       .and(path(
         "/api/issuer/v1beta/participants/participant-1/holders",
       ))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .and(body_json(&holder))
       .respond_with(ResponseTemplate::new(201))
       .expect(1)
@@ -627,7 +627,7 @@ mod tests {
       .and(path(
         "/api/issuer/v1beta/participants/participant-1/holders/holder-1",
       ))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .respond_with(ResponseTemplate::new(200).set_body_json(json!({
         "holderId": "holder-1",
         "participantContextId": "participant-1",
@@ -663,7 +663,7 @@ mod tests {
       .and(path(
         "/api/issuer/v1beta/participants/participant-1/holders/query",
       ))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .and(body_json(&query))
       .respond_with(ResponseTemplate::new(200).set_body_json(json!([
         {
@@ -709,7 +709,7 @@ mod tests {
       .and(path(
         "/api/issuer/v1beta/participants/participant-1/holders/holder-1",
       ))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .respond_with(ResponseTemplate::new(204))
       .expect(1)
       .mount(&mock_server)
@@ -736,7 +736,7 @@ mod tests {
       .and(path(
         "/api/issuer/v1beta/participants/participant-1/holders",
       ))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .and(body_json(&holder))
       .respond_with(ResponseTemplate::new(200))
       .expect(1)
@@ -820,7 +820,7 @@ mod tests {
   }
 
   #[tokio::test]
-  async fn revoke_credential_posts_to_revoke_with_bearer_token() {
+  async fn revoke_credential_posts_to_revoke_with_api_key() {
     let mock_server = MockServer::start().await;
     let participant_context_id = "participant-1";
     let credential_id = "cred-1";
@@ -829,7 +829,7 @@ mod tests {
       .and(path(format!(
         "/api/issuer/v1beta/participants/{participant_context_id}/credentials/{credential_id}/revoke"
       )))
-      .and(header("Authorization", "Bearer test-token"))
+      .and(header("x-api-key", "test-token"))
       .respond_with(ResponseTemplate::new(200))
       .mount(&mock_server)
       .await;
