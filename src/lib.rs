@@ -479,11 +479,29 @@ impl IdentityHubClient {
 
   pub async fn add_keypair(
     &self,
-    _participant_context_id: &str,
-    _descriptor: &KeyDescriptor,
-    _make_default: bool,
+    participant_context_id: &str,
+    descriptor: &KeyDescriptor,
+    make_default: bool,
   ) -> Result<()> {
-    unimplemented!("add_keypair")
+    let url = format!(
+      "{}/api/identity/{}/participants/{participant_context_id}/keypairs?makeDefault={make_default}",
+      self.endpoint, self.version
+    );
+    let request_builder = self.client.put(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder.json(descriptor).send().await?;
+
+    if response.status().is_success() {
+      Ok(())
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
   }
 }
 
