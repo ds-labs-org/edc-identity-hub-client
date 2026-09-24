@@ -476,6 +476,15 @@ impl IdentityHubClient {
       Err(IdentityHubClientError::Response(response))
     }
   }
+
+  pub async fn add_keypair(
+    &self,
+    _participant_context_id: &str,
+    _descriptor: &KeyDescriptor,
+    _make_default: bool,
+  ) -> Result<()> {
+    unimplemented!("add_keypair")
+  }
 }
 
 // wiremock/tokio are only pulled in as dev-dependencies for non-wasm32
@@ -690,5 +699,37 @@ mod identity_hub_client_tests {
 
     assert_eq!(keypair.id, "keypair-1");
     assert_eq!(keypair.state, 200);
+  }
+
+  fn key_generator_descriptor() -> KeyDescriptor {
+    KeyDescriptor {
+      key_id: Some("bootstrap-key-1".to_string()),
+      key_generator_params: Some(serde_json::json!({"algorithm": "EC"})),
+      ..Default::default()
+    }
+  }
+
+  #[tokio::test]
+  async fn add_keypair_puts_descriptor_with_make_default_query_param() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("PUT"))
+      .and(path(
+        "/api/identity/v1beta/participants/participant-1/keypairs",
+      ))
+      .and(wiremock::matchers::query_param("makeDefault", "true"))
+      .and(header("Authorization", "Bearer test-token"))
+      .and(body_json(&key_generator_descriptor()))
+      .respond_with(ResponseTemplate::new(201))
+      .expect(1)
+      .mount(&server)
+      .await;
+
+    let client = client_with_token(server.uri(), "test-token");
+
+    client
+      .add_keypair("participant-1", &key_generator_descriptor(), true)
+      .await
+      .expect("add_keypair should succeed against the mocked endpoint");
   }
 }
