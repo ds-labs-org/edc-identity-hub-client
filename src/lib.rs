@@ -557,6 +557,15 @@ impl IdentityHubClient {
       Err(IdentityHubClientError::Response(response))
     }
   }
+
+  pub async fn revoke_keypair(
+    &self,
+    _participant_context_id: &str,
+    _key_pair_id: &str,
+    _new_key: Option<&KeyDescriptor>,
+  ) -> Result<()> {
+    unimplemented!("revoke_keypair")
+  }
 }
 
 // wiremock/tokio are only pulled in as dev-dependencies for non-wasm32
@@ -849,5 +858,29 @@ mod identity_hub_client_tests {
       .rotate_keypair("participant-1", "keypair-1", None, 3600)
       .await
       .expect("rotate_keypair should succeed against the mocked endpoint");
+  }
+
+  #[tokio::test]
+  async fn revoke_keypair_posts_to_revoke_with_replacement_descriptor() {
+    let server = MockServer::start().await;
+    let replacement = key_generator_descriptor();
+
+    Mock::given(method("POST"))
+      .and(path(
+        "/api/identity/v1beta/participants/participant-1/keypairs/keypair-1/revoke",
+      ))
+      .and(header("Authorization", "Bearer test-token"))
+      .and(body_json(&Some(replacement.clone())))
+      .respond_with(ResponseTemplate::new(204))
+      .expect(1)
+      .mount(&server)
+      .await;
+
+    let client = client_with_token(server.uri(), "test-token");
+
+    client
+      .revoke_keypair("participant-1", "keypair-1", Some(&replacement))
+      .await
+      .expect("revoke_keypair should succeed against the mocked endpoint");
   }
 }
