@@ -343,6 +343,10 @@ impl IdentityHubClient {
       Err(IdentityHubClientError::Response(response))
     }
   }
+
+  pub async fn unpublish_did(&self, _participant_context_id: &str, _did: &str) -> Result<()> {
+    unimplemented!("unpublish_did")
+  }
 }
 
 // wiremock/tokio are only pulled in as dev-dependencies for non-wasm32
@@ -398,5 +402,28 @@ mod identity_hub_client_tests {
       .publish_did("participant-1", "did:web:example.com")
       .await
       .expect("publish_did should succeed against the mocked endpoint");
+  }
+
+  #[tokio::test]
+  async fn unpublish_did_posts_to_dids_unpublish() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+      .and(path(
+        "/api/identity/v1beta/participants/participant-1/dids/unpublish",
+      ))
+      .and(header("Authorization", "Bearer test-token"))
+      .and(body_json(&DidRequestPayload::new("did:web:example.com")))
+      .respond_with(ResponseTemplate::new(204))
+      .expect(1)
+      .mount(&server)
+      .await;
+
+    let client = client_with_token(server.uri(), "test-token");
+
+    client
+      .unpublish_did("participant-1", "did:web:example.com")
+      .await
+      .expect("unpublish_did should succeed against the mocked endpoint");
   }
 }
