@@ -429,8 +429,26 @@ impl IdentityHubClient {
   // Keypair management (.../keypairs)
   // ---------------------------------------------------------------------
 
-  pub async fn list_keypairs(&self, _participant_context_id: &str) -> Result<Vec<KeyPairResource>> {
-    unimplemented!("list_keypairs")
+  pub async fn list_keypairs(&self, participant_context_id: &str) -> Result<Vec<KeyPairResource>> {
+    let url = format!(
+      "{}/api/identity/{}/participants/{participant_context_id}/keypairs",
+      self.endpoint, self.version
+    );
+    let request_builder = self.client.get(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder.send().await?;
+
+    if response.status().is_success() {
+      Ok(response.json().await?)
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
   }
 }
 
