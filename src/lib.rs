@@ -371,10 +371,28 @@ impl IdentityHubClient {
 
   pub async fn query_dids(
     &self,
-    _participant_context_id: &str,
-    _query: &QuerySpec,
+    participant_context_id: &str,
+    query: &QuerySpec,
   ) -> Result<Vec<DidDocument>> {
-    unimplemented!("query_dids")
+    let url = format!(
+      "{}/api/identity/{}/participants/{participant_context_id}/dids/query",
+      self.endpoint, self.version
+    );
+    let request_builder = self.client.post(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder.json(query).send().await?;
+
+    if response.status().is_success() {
+      Ok(response.json().await?)
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
   }
 }
 
