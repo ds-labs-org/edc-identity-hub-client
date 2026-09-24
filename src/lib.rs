@@ -503,6 +503,14 @@ impl IdentityHubClient {
       Err(IdentityHubClientError::Response(response))
     }
   }
+
+  pub async fn activate_keypair(
+    &self,
+    _participant_context_id: &str,
+    _key_pair_id: &str,
+  ) -> Result<()> {
+    unimplemented!("activate_keypair")
+  }
 }
 
 // wiremock/tokio are only pulled in as dev-dependencies for non-wasm32
@@ -749,5 +757,27 @@ mod identity_hub_client_tests {
       .add_keypair("participant-1", &key_generator_descriptor(), true)
       .await
       .expect("add_keypair should succeed against the mocked endpoint");
+  }
+
+  #[tokio::test]
+  async fn activate_keypair_posts_to_activate() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("POST"))
+      .and(path(
+        "/api/identity/v1beta/participants/participant-1/keypairs/keypair-1/activate",
+      ))
+      .and(header("Authorization", "Bearer test-token"))
+      .respond_with(ResponseTemplate::new(204))
+      .expect(1)
+      .mount(&server)
+      .await;
+
+    let client = client_with_token(server.uri(), "test-token");
+
+    client
+      .activate_keypair("participant-1", "keypair-1")
+      .await
+      .expect("activate_keypair should succeed against the mocked endpoint");
   }
 }
