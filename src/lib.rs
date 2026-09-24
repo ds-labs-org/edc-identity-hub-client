@@ -450,6 +450,14 @@ impl IdentityHubClient {
       Err(IdentityHubClientError::Response(response))
     }
   }
+
+  pub async fn get_keypair(
+    &self,
+    _participant_context_id: &str,
+    _key_pair_id: &str,
+  ) -> Result<KeyPairResource> {
+    unimplemented!("get_keypair")
+  }
 }
 
 // wiremock/tokio are only pulled in as dev-dependencies for non-wasm32
@@ -639,5 +647,30 @@ mod identity_hub_client_tests {
     assert_eq!(keypairs.len(), 1);
     assert_eq!(keypairs[0].id, "keypair-1");
     assert!(keypairs[0].default_pair);
+  }
+
+  #[tokio::test]
+  async fn get_keypair_gets_a_single_resource_by_id() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+      .and(path(
+        "/api/identity/v1beta/participants/participant-1/keypairs/keypair-1",
+      ))
+      .and(header("Authorization", "Bearer test-token"))
+      .respond_with(ResponseTemplate::new(200).set_body_json(key_pair_resource("keypair-1", true)))
+      .expect(1)
+      .mount(&server)
+      .await;
+
+    let client = client_with_token(server.uri(), "test-token");
+
+    let keypair = client
+      .get_keypair("participant-1", "keypair-1")
+      .await
+      .expect("get_keypair should succeed against the mocked endpoint");
+
+    assert_eq!(keypair.id, "keypair-1");
+    assert_eq!(keypair.state, 200);
   }
 }
