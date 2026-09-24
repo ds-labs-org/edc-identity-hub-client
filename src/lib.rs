@@ -424,6 +424,14 @@ impl IdentityHubClient {
       Err(IdentityHubClientError::Response(response))
     }
   }
+
+  // ---------------------------------------------------------------------
+  // Keypair management (.../keypairs)
+  // ---------------------------------------------------------------------
+
+  pub async fn list_keypairs(&self, _participant_context_id: &str) -> Result<Vec<KeyPairResource>> {
+    unimplemented!("list_keypairs")
+  }
 }
 
 // wiremock/tokio are only pulled in as dev-dependencies for non-wasm32
@@ -564,5 +572,54 @@ mod identity_hub_client_tests {
       .expect("get_did_state should succeed against the mocked endpoint");
 
     assert_eq!(state, "PUBLISHED");
+  }
+
+  // -- keypairs ----------------------------------------------------------
+
+  fn key_pair_resource(id: &str, default_pair: bool) -> KeyPairResource {
+    KeyPairResource {
+      id: id.to_string(),
+      created_at: 1_700_000_000_000,
+      participant_context_id: "participant-1".to_string(),
+      timestamp: 1_700_000_000_000,
+      key_id: format!("{id}-kid"),
+      group_name: None,
+      key_context: Some("JsonWebKey2020".to_string()),
+      default_pair,
+      use_duration: 15_552_000_000,
+      rotation_duration: 0,
+      serialized_public_key: "{\"kty\":\"EC\"}".to_string(),
+      private_key_alias: format!("{id}-alias"),
+      state: 200,
+      usage: vec![crate::models::KeyPairUsage::SignCredentials],
+    }
+  }
+
+  #[tokio::test]
+  async fn list_keypairs_gets_the_keypairs_collection() {
+    let server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+      .and(path(
+        "/api/identity/v1beta/participants/participant-1/keypairs",
+      ))
+      .and(header("Authorization", "Bearer test-token"))
+      .respond_with(
+        ResponseTemplate::new(200).set_body_json(vec![key_pair_resource("keypair-1", true)]),
+      )
+      .expect(1)
+      .mount(&server)
+      .await;
+
+    let client = client_with_token(server.uri(), "test-token");
+
+    let keypairs = client
+      .list_keypairs("participant-1")
+      .await
+      .expect("list_keypairs should succeed against the mocked endpoint");
+
+    assert_eq!(keypairs.len(), 1);
+    assert_eq!(keypairs[0].id, "keypair-1");
+    assert!(keypairs[0].default_pair);
   }
 }
