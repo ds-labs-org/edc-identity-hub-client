@@ -506,10 +506,28 @@ impl IdentityHubClient {
 
   pub async fn activate_keypair(
     &self,
-    _participant_context_id: &str,
-    _key_pair_id: &str,
+    participant_context_id: &str,
+    key_pair_id: &str,
   ) -> Result<()> {
-    unimplemented!("activate_keypair")
+    let url = format!(
+      "{}/api/identity/{}/participants/{participant_context_id}/keypairs/{key_pair_id}/activate",
+      self.endpoint, self.version
+    );
+    let request_builder = self.client.post(&url);
+
+    let request_builder = if let Some(bearer_token) = &self.bearer_token {
+      request_builder.header("Authorization", format!("Bearer {bearer_token}"))
+    } else {
+      request_builder
+    };
+
+    let response = request_builder.send().await?;
+
+    if response.status().is_success() {
+      Ok(())
+    } else {
+      Err(IdentityHubClientError::Response(response))
+    }
   }
 }
 
